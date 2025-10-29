@@ -2,7 +2,11 @@ services:
   - type: web
     name: sentiment-analysis
     env: python
-    buildCommand: pip install -r requirements.txt
+    buildCommand: |
+      apt-get update && apt-get install -y build-essential
+      pip install --upgrade pip
+      pip install wheel setuptools
+      pip install -r requirements.txt
     startCommand: gunicorn app:app --timeout 120 --workers 1 --threads 2
     envVars:
       - key: PYTHON_VERSION
@@ -11,6 +15,10 @@ services:
         value: /tmp/transformers_cache
       - key: TORCH_HOME
         value: /tmp/torch_home
+      - key: PIP_NO_CACHE_DIR
+        value: "true"
+      - key: TOKENIZERS_PARALLELISM
+        value: "false"
     disk:
       name: tmp
       mountPath: /tmp
