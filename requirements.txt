@@ -10,12 +10,3 @@ requests==2.31.0
 beautifulsoup4==4.12.2
 flask==2.3.3
 gunicorn==20.1.0
-
-# Pre-built wheels for problematic packages
-regex==2023.10.3 --only-binary :all:
-tqdm==4.66.1 --only-binary :all:
-packaging==23.2 --only-binary :all:
-filelock==3.13.1 --only-binary :all:
-typing-extensions==4.8.0 --only-binary :all:
-sympy==1.12 --only-binary :all:
-networkx==3.2.1 --only-binary :all:
