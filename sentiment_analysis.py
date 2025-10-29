@@ -13,7 +13,7 @@ DEFAULT_MODEL = 'nlptown/bert-base-multilingual-uncased-sentiment'
 
 def load_model_and_tokenizer(model_name: str = DEFAULT_MODEL, device: torch.device = None):
     """
-    Load the BERT model and tokenizer.
+    Load the BERT model and tokenizer with memory optimizations.
     Args:
         model_name: HuggingFace model name/path
         device: torch device to use (will detect CUDA if None)
@@ -24,10 +24,28 @@ def load_model_and_tokenizer(model_name: str = DEFAULT_MODEL, device: torch.devi
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
     try:
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
-        model = AutoModelForSequenceClassification.from_pretrained(model_name)
+        # Load tokenizer with minimal memory usage
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_name,
+            low_cpu_mem_usage=True,
+            local_files_only=False
+        )
+        
+        # Load model with memory optimizations
+        model = AutoModelForSequenceClassification.from_pretrained(
+            model_name,
+            low_cpu_mem_usage=True,
+            torch_dtype=torch.float32,  # Use float32 instead of float64
+            local_files_only=False
+        )
+        
         model.to(device)
         model.eval()  # Set to evaluation mode
+        
+        # Clear CUDA cache if using GPU
+        if device.type == 'cuda':
+            torch.cuda.empty_cache()
+            
         return tokenizer, model
     except Exception as e:
         raise RuntimeError(f"Failed to load model/tokenizer: {str(e)}")

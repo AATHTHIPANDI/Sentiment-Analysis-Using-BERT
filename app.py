@@ -2,12 +2,29 @@ from flask import Flask, render_template, request, jsonify
 from sentiment_analysis import load_model_and_tokenizer, analyze_sentiment
 import torch
 import os
+import gc  # For garbage collection
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
 
-# Load model and tokenizer once at startup
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-tokenizer, model = load_model_and_tokenizer("nlptown/bert-base-multilingual-uncased-sentiment", device)
+# Force CPU usage for Render deployment
+device = torch.device("cpu")
+logging.info(f"Using device: {device}")
+
+# Load model and tokenizer once at startup with optimizations
+try:
+    # Clear any existing cached memory
+    gc.collect()
+    torch.cuda.empty_cache() if torch.cuda.is_available() else None
+    
+    tokenizer, model = load_model_and_tokenizer("nlptown/bert-base-multilingual-uncased-sentiment", device)
+    logging.info("Model loaded successfully")
+except Exception as e:
+    logging.error(f"Error loading model: {str(e)}")
+    raise
 
 def map_sentiment_to_category(score):
     """Map 1-5 sentiment score to category and color"""
