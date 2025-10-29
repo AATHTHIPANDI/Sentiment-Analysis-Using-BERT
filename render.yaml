@@ -3,10 +3,14 @@ services:
     name: sentiment-analysis
     env: python
     buildCommand: |
-      apt-get update && apt-get install -y build-essential
-      pip install --upgrade pip
-      pip install wheel setuptools
-      pip install -r requirements.txt
+      # Update and install system packages
+      apt-get update
+      if [ -f apt-packages ]; then cat apt-packages | xargs apt-get install -y; fi
+      
+      # Setup pip and install dependencies
+      python -m pip install --upgrade pip
+      pip install --no-cache-dir wheel setuptools
+      pip install --no-cache-dir --only-binary :all: -r requirements.txt
     startCommand: gunicorn app:app --timeout 120 --workers 1 --threads 2
     envVars:
       - key: PYTHON_VERSION
@@ -19,6 +23,8 @@ services:
         value: "true"
       - key: TOKENIZERS_PARALLELISM
         value: "false"
+      - key: PIP_ONLY_BINARY
+        value: ":all:"
     disk:
       name: tmp
       mountPath: /tmp
